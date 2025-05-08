@@ -51,9 +51,8 @@ public class InventoryFileHandler {
         }
     }
 
-    /**
-     * Writes a text report for one product, including details and stock count.
-     */
+
+    // Writes a text report for one product, including details and stock count
     public static void exportProductReport(Inventory inv, String name) {
         Product p = inv.searchByName(name);
         if (p == null) {
@@ -71,6 +70,35 @@ public class InventoryFileHandler {
             System.out.println("✔ Report written to " + filename);
         } catch (IOException e) {
             System.err.println("Error writing report: " + e.getMessage());
+        }
+    }
+    public static void exportFullInventoryReport(Inventory inv) {
+        String filename = "full_inventory_report.txt";
+        double totalCost   = 0;
+        double totalRetail = 0;
+
+        try (PrintWriter out = new PrintWriter(new FileWriter(filename))) {
+            out.println("Full Inventory Report");
+            out.println("=====================\n");
+            for (Product p : inv.getProducts()) {
+                // Write each product line
+                out.printf("%s | %s > %s | Qty: %d | Cost: %.2f | Price: %.2f%n",
+                        p.getName(), p.getCategory(), p.getSubCategory(),
+                        p.getQuantity(), p.getCostPrice(), p.getRetailPrice());
+
+                // Accumulate totals
+                totalCost   += p.getCostPrice()   * p.getQuantity();
+                totalRetail += p.getRetailPrice() * p.getQuantity();
+            }
+
+            // Blank line before totals
+            out.println();
+            out.printf("TOTAL COST VALUE:   %.2f%n", totalCost);
+            out.printf("TOTAL RETAIL VALUE: %.2f%n", totalRetail);
+
+            System.out.println("✔ Full inventory report written to " + filename);
+        } catch (IOException e) {
+            System.err.println("Error writing full report: " + e.getMessage());
         }
     }
 }

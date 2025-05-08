@@ -80,8 +80,9 @@ public class Main {
                             "6. Search by Category\n" +
                             "7. Search by Sub-category\n" +
                             "8. Export Product Report\n" +
-                            "9. Settings\n" +
-                            "10. Exit"
+                            "9. Export Full Inventory Report\n" +
+                            "10. Settings\n" +
+                            "11. Exit"
             );
             String choice = scan.nextLine();
             switch (choice) {
@@ -92,18 +93,20 @@ public class Main {
                 case "5": searchByName(inv, scan); break;
                 case "6": searchByCategory(inv, scan); break;
                 case "7": searchBySubCategory(inv, scan); break;
-                case "8":                         // ← new case
+                case "8":
                     System.out.print("Enter product name: ");
                     String prodToReport = scan.nextLine();
                     InventoryFileHandler.exportProductReport(inv, prodToReport);
                     break;
-                case "9": settingsMenu(scan, me); break;
-                case "10": return;
+                case "9":
+                    InventoryFileHandler.exportFullInventoryReport(inv); break;
+                case "10": settingsMenu(scan, me); break;
+                case "11": return;
                 default:  System.out.println("Invalid choice, try again.");
             }
             }
         }
-    }
+
 
 // Standard menu
 
@@ -116,8 +119,10 @@ public class Main {
                             "4. Search by Name\n" +
                             "5. Search by Category\n" +
                             "6. Search by Sub-category\n" +
-                            "7. Export Product Report\n" +  // ← new
-                            "8. Exit"
+                            "7. Export Product Report\n" +
+                            "8. Export Full Inventory Report\n" +
+                            "9. Exit"
+
             );
             String choice = scan.nextLine();
             switch (choice) {
@@ -127,12 +132,14 @@ public class Main {
                 case "4": searchByName(inv, scan); break;
                 case "5": searchByCategory(inv, scan); break;
                 case "6": searchBySubCategory(inv, scan); break;
-                case "7":                         // ← new case
+                case "7":
                     System.out.print("Enter product name: ");
                     String prodToReport = scan.nextLine();
                     InventoryFileHandler.exportProductReport(inv, prodToReport);
                     break;
-                case "8": return;
+                case "8":InventoryFileHandler.exportFullInventoryReport(inv); break;
+                   
+                case "9": return;
                 default:  System.out.println("Invalid choice, try again.");
             }
         }
