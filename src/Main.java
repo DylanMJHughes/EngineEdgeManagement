@@ -6,6 +6,7 @@ import model.OrderItem;
 import utils.InventoryFileHandler;
 import utils.OrderFileHandler;
 
+
 import java.util.Scanner;
 import java.util.List;
 import java.util.ArrayList;
@@ -72,45 +73,34 @@ public class Main {
         while (true) {
             System.out.println(
                     "\n1. Add Product\n" +
-                            "2. Restock Product\n" +       // ← new line
+                            "2. Restock Product\n" +
                             "3. Show Inventory\n" +
                             "4. Sell Product\n" +
                             "5. Search by Name\n" +
                             "6. Search by Category\n" +
                             "7. Search by Sub-category\n" +
-                            "8. Settings\n" +
-                            "9. Exit"
+                            "8. Export Product Report\n" +
+                            "9. Settings\n" +
+                            "10. Exit"
             );
             String choice = scan.nextLine();
             switch (choice) {
-                case "1":
-                    addProduct(inv, scan);
+                case "1": addProduct(inv, scan); break;
+                case "2": restockProduct(inv, scan); break;
+                case "3": inv.showInventory(); break;
+                case "4": sellProduct(inv, scan); break;
+                case "5": searchByName(inv, scan); break;
+                case "6": searchByCategory(inv, scan); break;
+                case "7": searchBySubCategory(inv, scan); break;
+                case "8":                         // ← new case
+                    System.out.print("Enter product name: ");
+                    String prodToReport = scan.nextLine();
+                    InventoryFileHandler.exportProductReport(inv, prodToReport);
                     break;
-                case "2":
-                    restockProduct(inv, scan);    // ← new case
-                    break;
-                case "3":
-                    inv.showInventory();
-                    break;
-                case "4":
-                    sellProduct(inv, scan);
-                    break;
-                case "5":
-                    searchByName(inv, scan);
-                    break;
-                case "6":
-                    searchByCategory(inv, scan);
-                    break;
-                case "7":
-                    searchBySubCategory(inv, scan);
-                    break;
-                case "8":
-                    settingsMenu(scan, me);
-                    break;
-                case "9":
-                    return;
-                default:
-                    System.out.println("Invalid choice, try again.");
+                case "9": settingsMenu(scan, me); break;
+                case "10": return;
+                default:  System.out.println("Invalid choice, try again.");
+            }
             }
         }
     }
@@ -121,37 +111,29 @@ public class Main {
         while (true) {
             System.out.println(
                     "\n1. Sell Product\n" +
-                            "2. Restock Product\n" +      // ← new line
+                            "2. Restock Product\n" +
                             "3. Show Inventory\n" +
                             "4. Search by Name\n" +
                             "5. Search by Category\n" +
                             "6. Search by Sub-category\n" +
-                            "7. Exit"
+                            "7. Export Product Report\n" +  // ← new
+                            "8. Exit"
             );
             String choice = scan.nextLine();
             switch (choice) {
-                case "1":
-                    sellProduct(inv, scan);
+                case "1": sellProduct(inv, scan); break;
+                case "2": restockProduct(inv, scan); break;
+                case "3": inv.showInventory(); break;
+                case "4": searchByName(inv, scan); break;
+                case "5": searchByCategory(inv, scan); break;
+                case "6": searchBySubCategory(inv, scan); break;
+                case "7":                         // ← new case
+                    System.out.print("Enter product name: ");
+                    String prodToReport = scan.nextLine();
+                    InventoryFileHandler.exportProductReport(inv, prodToReport);
                     break;
-                case "2":
-                    restockProduct(inv, scan);  // ← new case
-                    break;
-                case "3":
-                    inv.showInventory();
-                    break;
-                case "4":
-                    searchByName(inv, scan);
-                    break;
-                case "5":
-                    searchByCategory(inv, scan);
-                    break;
-                case "6":
-                    searchBySubCategory(inv, scan);
-                    break;
-                case "7":
-                    return;
-                default:
-                    System.out.println("Invalid choice, try again.");
+                case "8": return;
+                default:  System.out.println("Invalid choice, try again.");
             }
         }
     }
