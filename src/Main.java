@@ -13,7 +13,7 @@ import java.util.ArrayList;
 public class Main {
     /** In-memory users **/
     private static List<User> users = new ArrayList<>();
-    /** In-memory orders **/
+    // In-memory orders
     private static List<Order> orders = new ArrayList<>();
 
     static {
@@ -30,14 +30,15 @@ public class Main {
         Scanner scan = new Scanner(System.in);
         User currentUser = login(scan);
 
-        /** Branch into the main loop **/
+        // Branch into the main loop
         if (currentUser.getRole().equals("admin")) {
             adminMenu(inv, scan, currentUser);
         } else {
             standardMenu(inv, scan);
         }
 
-        /** exit, save the inventory and orders **/
+        // exit, save the inventory and orders
+
         InventoryFileHandler.saveInventory(inv);
         OrderFileHandler.saveOrders(orders);
         scan.close();
@@ -66,18 +67,19 @@ public class Main {
                 + " (" + currentUser.getRole() + ")");
         return currentUser;
     }
-
+// Admin Menu
     private static void adminMenu(Inventory inv, Scanner scan, User me) {
         while (true) {
             System.out.println(
                     "\n1. Add Product\n" +
-                            "2. Show Inventory\n" +
-                            "3. Sell Product\n" +
-                            "4. Search by Name\n" +
-                            "5. Search by Category\n" +
-                            "6. Search by Sub-category\n" +
-                            "7. Settings\n" +
-                            "8. Exit"
+                            "2. Restock Product\n" +       // ← new line
+                            "3. Show Inventory\n" +
+                            "4. Sell Product\n" +
+                            "5. Search by Name\n" +
+                            "6. Search by Category\n" +
+                            "7. Search by Sub-category\n" +
+                            "8. Settings\n" +
+                            "9. Exit"
             );
             String choice = scan.nextLine();
             switch (choice) {
@@ -85,10 +87,57 @@ public class Main {
                     addProduct(inv, scan);
                     break;
                 case "2":
-                    inv.showInventory();
+                    restockProduct(inv, scan);    // ← new case
                     break;
                 case "3":
+                    inv.showInventory();
+                    break;
+                case "4":
                     sellProduct(inv, scan);
+                    break;
+                case "5":
+                    searchByName(inv, scan);
+                    break;
+                case "6":
+                    searchByCategory(inv, scan);
+                    break;
+                case "7":
+                    searchBySubCategory(inv, scan);
+                    break;
+                case "8":
+                    settingsMenu(scan, me);
+                    break;
+                case "9":
+                    return;
+                default:
+                    System.out.println("Invalid choice, try again.");
+            }
+        }
+    }
+
+// Standard menu
+
+    private static void standardMenu(Inventory inv, Scanner scan) {
+        while (true) {
+            System.out.println(
+                    "\n1. Sell Product\n" +
+                            "2. Restock Product\n" +      // ← new line
+                            "3. Show Inventory\n" +
+                            "4. Search by Name\n" +
+                            "5. Search by Category\n" +
+                            "6. Search by Sub-category\n" +
+                            "7. Exit"
+            );
+            String choice = scan.nextLine();
+            switch (choice) {
+                case "1":
+                    sellProduct(inv, scan);
+                    break;
+                case "2":
+                    restockProduct(inv, scan);  // ← new case
+                    break;
+                case "3":
+                    inv.showInventory();
                     break;
                 case "4":
                     searchByName(inv, scan);
@@ -100,9 +149,6 @@ public class Main {
                     searchBySubCategory(inv, scan);
                     break;
                 case "7":
-                    settingsMenu(scan, me);
-                    break;
-                case "8":
                     return;
                 default:
                     System.out.println("Invalid choice, try again.");
@@ -110,42 +156,8 @@ public class Main {
         }
     }
 
-    private static void standardMenu(Inventory inv, Scanner scan) {
-        while (true) {
-            System.out.println(
-                    "\n1. Sell Product\n" +
-                            "2. Show Inventory\n" +
-                            "3. Search by Name\n" +
-                            "4. Search by Category\n" +
-                            "5. Search by Sub-category\n" +
-                            "6. Exit"
-            );
-            String choice = scan.nextLine();
-            switch (choice) {
-                case "1":
-                    sellProduct(inv, scan);
-                    break;
-                case "2":
-                    inv.showInventory();
-                    break;
-                case "3":
-                    searchByName(inv, scan);
-                    break;
-                case "4":
-                    searchByCategory(inv, scan);
-                    break;
-                case "5":
-                    searchBySubCategory(inv, scan);
-                    break;
-                case "6":
-                    return;
-                default:
-                    System.out.println("Invalid choice, try again.");
-            }
-        }
-    }
 
-    /** helper methods **/
+    // helper methods
 
     private static void addProduct(Inventory inv, Scanner scan) {
         System.out.print("Name: ");
@@ -165,6 +177,29 @@ public class Main {
         System.out.println("→ Product added!");
     }
 
+    private static void restockProduct(Inventory inv, Scanner scan) {
+        System.out.print("Product name to restock: ");
+        String name = scan.nextLine();
+        Product p = inv.searchByName(name);
+        if (p == null) {
+            System.out.println("✖ No such product.");
+            return;
+        }
+
+        System.out.print("Quantity to add: ");
+        int qty;
+        try {
+            qty = Integer.parseInt(scan.nextLine());
+        } catch (NumberFormatException e) {
+            System.out.println("✖ Invalid number.");
+            return;
+        }
+
+        p.increaseStock(qty);
+        System.out.println("✔ Restocked. New quantity: " + p.getQuantity());
+    }
+
+    // Search Products
     private static void searchByName(Inventory inv, Scanner scan) {
         System.out.print("Enter Name: ");
         Product p = inv.searchByName(scan.nextLine());
