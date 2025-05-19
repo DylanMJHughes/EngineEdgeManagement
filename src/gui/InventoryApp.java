@@ -17,7 +17,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.Collections;
 import java.util.Optional;
-
+import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 public class InventoryApp extends Application {
     private Stage primaryStage;
@@ -218,7 +219,6 @@ public class InventoryApp extends Application {
     private void promptAndSearchName() {
         String n = prompt("Enter product name:");
         Product p = inventory.searchByName(n);
-
         alert(p != null ? formatProduct(p) : "No product found.");
     }
 
@@ -320,17 +320,6 @@ public class InventoryApp extends Application {
         dialog.show();
     }
 
-    private String formatProduct(Product p) {
-        return String.format(
-                "%s | %s > %s | Qty: %d | Cost: %.2f | Price: %.2f",
-                p.getName(),
-                p.getCategory(),
-                p.getSubCategory(),
-                p.getQuantity(),
-                p.getCostPrice(),
-                p.getRetailPrice()
-        );
-    }
     private String prompt(String msg) {
         TextInputDialog dlg = new TextInputDialog();
         styleDialog(dlg);
@@ -339,12 +328,29 @@ public class InventoryApp extends Application {
         return res.orElse("").trim();
     }
 
+    private String formatProduct(Product p) {
+        return String.format(
+                "Name: %s%n" +
+                        "Category: %s%n" +
+                        "Sub-category: %s%n" +
+                        "Cost Price: %.2f%n" +
+                        "Retail Price: %.2f%n" +
+                        "Quantity: %d",
+                p.getName(),
+                p.getCategory(),
+                p.getSubCategory(),
+                p.getCostPrice(),
+                p.getRetailPrice(),
+                p.getQuantity()
+        );
+    }
     private void alert(String msg) {
         Alert dlg = new Alert(Alert.AlertType.INFORMATION);
         styleDialog(dlg);
         dlg.setHeaderText(null);
         dlg.setContentText(msg);
         dlg.showAndWait();
+
     }
 
     @Override
