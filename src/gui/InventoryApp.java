@@ -161,7 +161,7 @@ public class InventoryApp extends Application {
                 createButton("Search by Sub-category", e -> promptAndSearchSub()),
                 createButton("Export Product Report", e -> exportSingleReport()),
                 createButton("Export Full Inventory Report", e -> InventoryFileHandler.exportFullInventoryReport(inventory)),
-                createButton("Settings", e -> primaryStage.setScene(buildSettingsScene())),
+                createButton("Settings", e -> primaryStage.setScene(buildSettingsScene(user))),
                 createButton("Log out", e -> primaryStage.setScene(buildLoginScene()))
         };
 
@@ -172,38 +172,131 @@ public class InventoryApp extends Application {
         return scene;
     }
 
-    private Scene buildSettingsScene() {
+    private Scene buildSettingsScene(User admin) {
         VBox root = new VBox(10);
         root.setAlignment(Pos.TOP_CENTER);
         root.setStyle("-fx-padding:20; -fx-background-color:#2b2b2b;");
 
-        Label title = new Label("Pending Registrations");
+        Label title = new Label("Admin Settings");
         title.setStyle("-fx-text-fill:white; -fx-font-size:16px;");
 
-        ListView<String> listView = new ListView<>();
-        listView.setItems(FXCollections.observableArrayList(
-                pendingUsers.stream().map(User::getUsername).collect(Collectors.toList())
+        // ListView of pending registrations
+        ListView<String> pendingView = new ListView<>();
+        pendingView.setItems(FXCollections.observableArrayList(
+                pendingUsers.stream()
+                        .map(User::getUsername)
+                        .collect(Collectors.toList())
         ));
+        pendingView.setPrefHeight(200);
 
+        // Approve button
         Button approveBtn = createButton("Approve", e -> {
-            String sel = listView.getSelectionModel().getSelectedItem();
-            if (sel == null) { alert("Select a user to approve."); return; }
-            Optional<User> app = pendingUsers.stream().filter(u -> u.getUsername().equals(sel)).findFirst();
-            app.ifPresent(u -> {
-                pendingUsers.remove(u);
-                users.add(u);
-                alert("✔ Approved: " + u.getUsername());
-                listView.getItems().remove(sel);
-            });
+            String sel = pendingView.getSelectionModel().getSelectedItem();
+            if (sel == null) {
+                alert("Select a user to approve.");
+                return;
+            }
+            pendingUsers.stream()
+                    .filter(u -> u.getUsername().equals(sel))
+                    .findFirst()
+                    .ifPresent(u -> {
+                        pendingUsers.remove(u);
+                        users.add(u);
+                        alert("✔ Approved: " + u.getUsername());
+                        pendingView.getItems().remove(sel);
+                    });
         });
-        Button backBtn = createButton("Back", e -> primaryStage.setScene(buildAdminScene(users.stream()
-                .filter(u -> u.getRole().equals("admin")).findFirst().orElse(users.get(0)))));
 
-        root.getChildren().addAll(title, listView, approveBtn, backBtn);
-        Scene scene = new Scene(root, 360, 400);
-        scene.getStylesheets().add(getClass().getResource("dark-theme.css").toExternalForm());
+        // Disapprove button
+        Button disapproveBtn = createButton("Disapprove", e -> {
+            String sel = pendingView.getSelectionModel().getSelectedItem();
+            if (sel == null) {
+                alert("Select a user to disapprove.");
+                return;
+            }
+            pendingUsers.stream()
+                    .filter(u -> u.getUsername().equals(sel))
+                    .findFirst()
+                    .ifPresent(u -> {
+                        pendingUsers.remove(u);
+                        alert("✖ Disapproved: " + u.getUsername());
+                        pendingView.getItems().remove(sel);
+                    });
+        });
+
+        // List all users
+        Button listUsersBtn = createButton("List Users", e -> {
+            String all = users.stream()
+                    .map(User::getUsername)
+                    .collect(Collectors.joining("\n"));
+            alert("Current Users:\n" + (all.isEmpty() ? "(none)" : all));
+        });
+
+        // Add a new user
+        Button addUserBtn = createButton("Add User", e -> {
+            TextInputDialog uDlg = new TextInputDialog();
+            styleDialog(uDlg);
+            uDlg.setHeaderText("Enter new username:");
+            Optional<String> uOpt = uDlg.showAndWait();
+            if (!uOpt.isPresent() || uOpt.get().trim().isEmpty()) return;
+
+            TextInputDialog pDlg = new TextInputDialog();
+            styleDialog(pDlg);
+            pDlg.setHeaderText("Enter new password:");
+            Optional<String> pOpt = pDlg.showAndWait();
+            if (!pOpt.isPresent() || pOpt.get().trim().isEmpty()) return;
+
+            users.add(new User(uOpt.get().trim(), pOpt.get().trim(), "standard"));
+            alert("✔ User added: " + uOpt.get().trim());
+        });
+
+        // Delete an existing user
+        Button deleteUserBtn = createButton("Delete User", e -> {
+            TextInputDialog dDlg = new TextInputDialog();
+            styleDialog(dDlg);
+            dDlg.setHeaderText("Enter username to delete:");
+            Optional<String> dOpt = dDlg.showAndWait();
+            if (!dOpt.isPresent()) return;
+
+            String name = dOpt.get().trim();
+            Optional<User> toDel = users.stream()
+                    .filter(u -> u.getUsername().equals(name))
+                    .findFirst();
+            if (toDel.isPresent()) {
+                users.remove(toDel.get());
+                alert("✖ Deleted user: " + name);
+            } else {
+                alert("User not found: " + name);
+            }
+        });
+
+        // Back button
+        Button backBtn = createButton("Back", e ->
+                primaryStage.setScene(buildAdminScene(admin))
+        );
+
+        // Layout all buttons in a couple of HBoxes
+        HBox row1 = new HBox(10, approveBtn, disapproveBtn);
+        VBox row2 = new VBox(10, listUsersBtn, addUserBtn, deleteUserBtn);
+        row1.setAlignment(Pos.CENTER);
+        row2.setAlignment(Pos.CENTER);
+
+        root.getChildren().addAll(
+                title,
+                new Label("Pending Registrations:") {{ setStyle("-fx-text-fill:white;"); }},
+                pendingView,
+                row1,
+                row2,
+                backBtn
+        );
+
+        Scene scene = new Scene(root, 400, 500);
+        scene.getStylesheets().add(
+                getClass().getResource("dark-theme.css").toExternalForm()
+        );
         return scene;
     }
+
 
     private Button createButton(String text, javafx.event.EventHandler<javafx.event.ActionEvent> handler) {
         Button b = new Button(text);
