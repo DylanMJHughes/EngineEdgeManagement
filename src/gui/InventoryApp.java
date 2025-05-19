@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.Collections;
+import java.util.Optional;
+
 
 public class InventoryApp extends Application {
     private Stage primaryStage;
@@ -93,14 +95,22 @@ public class InventoryApp extends Application {
     }
 
     private void handleRegister() {
-        TextInputDialog dlgU = new TextInputDialog(); styleDialog(dlgU);
-        dlgU.setHeaderText("Choose a username:"); dlgU.showAndWait();
-        String nu = dlgU.getEditor().getText().trim(); if (nu.isEmpty()) return;
+        TextInputDialog dlgU = new TextInputDialog();
+        styleDialog(dlgU);
+        dlgU.setHeaderText("Choose a username:");
+        Optional<String> uOpt = dlgU.showAndWait();
+        if (!uOpt.isPresent()) return;
+        String nu = uOpt.get().trim();
+        if (nu.isEmpty()) return;
         for (User ex : users) if (ex.getUsername().equals(nu)) { alert("❌ Username already taken."); return; }
         for (User ex : pendingUsers) if (ex.getUsername().equals(nu)) { alert("❌ Registration pending."); return; }
-        TextInputDialog dlgP = new TextInputDialog(); styleDialog(dlgP);
-        dlgP.setHeaderText("Choose a password:"); dlgP.showAndWait();
-        String np = dlgP.getEditor().getText().trim(); if (np.isEmpty()) return;
+        TextInputDialog dlgP = new TextInputDialog();
+        styleDialog(dlgP);
+        dlgP.setHeaderText("Choose a password:");
+        Optional<String> pOpt = dlgP.showAndWait();
+        if (!pOpt.isPresent()) return;
+        String np = pOpt.get().trim();
+        if (np.isEmpty()) return;
         pendingUsers.add(new User(nu, np, "standard"));
         alert("✔ Registration submitted. Awaiting admin approval.");
     }
@@ -113,7 +123,7 @@ public class InventoryApp extends Application {
         Label title = new Label("User Menu: " + user.getUsername());
         title.setStyle("-fx-text-fill:white; -fx-font-size:16px;");
 
-        Button[] buttons = new Button[]{
+        Button[] buttons = {
                 createButton("Sell Product", e -> sellProduct()),
                 createButton("Restock Product", e -> restockProduct()),
                 createButton("Show Inventory", e -> showInventoryTable()),
@@ -140,7 +150,7 @@ public class InventoryApp extends Application {
         Label title = new Label("Admin Menu: " + user.getUsername());
         title.setStyle("-fx-text-fill:white; -fx-font-size:16px;");
 
-        Button[] buttons = new Button[]{
+        Button[] buttons = {
                 createButton("Add Product", e -> addProduct()),
                 createButton("Restock Product", e -> restockProduct()),
                 createButton("Show Inventory", e -> showInventoryTable()),
@@ -150,13 +160,46 @@ public class InventoryApp extends Application {
                 createButton("Search by Sub-category", e -> promptAndSearchSub()),
                 createButton("Export Product Report", e -> exportSingleReport()),
                 createButton("Export Full Inventory Report", e -> InventoryFileHandler.exportFullInventoryReport(inventory)),
-                createButton("Settings", e -> showSettings()),
+                createButton("Settings", e -> primaryStage.setScene(buildSettingsScene())),
                 createButton("Log out", e -> primaryStage.setScene(buildLoginScene()))
         };
 
         root.getChildren().add(title);
         root.getChildren().addAll(buttons);
         Scene scene = new Scene(root, 360, 600);
+        scene.getStylesheets().add(getClass().getResource("dark-theme.css").toExternalForm());
+        return scene;
+    }
+
+    private Scene buildSettingsScene() {
+        VBox root = new VBox(10);
+        root.setAlignment(Pos.TOP_CENTER);
+        root.setStyle("-fx-padding:20; -fx-background-color:#2b2b2b;");
+
+        Label title = new Label("Pending Registrations");
+        title.setStyle("-fx-text-fill:white; -fx-font-size:16px;");
+
+        ListView<String> listView = new ListView<>();
+        listView.setItems(FXCollections.observableArrayList(
+                pendingUsers.stream().map(User::getUsername).collect(Collectors.toList())
+        ));
+
+        Button approveBtn = createButton("Approve", e -> {
+            String sel = listView.getSelectionModel().getSelectedItem();
+            if (sel == null) { alert("Select a user to approve."); return; }
+            Optional<User> app = pendingUsers.stream().filter(u -> u.getUsername().equals(sel)).findFirst();
+            app.ifPresent(u -> {
+                pendingUsers.remove(u);
+                users.add(u);
+                alert("✔ Approved: " + u.getUsername());
+                listView.getItems().remove(sel);
+            });
+        });
+        Button backBtn = createButton("Back", e -> primaryStage.setScene(buildAdminScene(users.stream()
+                .filter(u -> u.getRole().equals("admin")).findFirst().orElse(users.get(0)))));
+
+        root.getChildren().addAll(title, listView, approveBtn, backBtn);
+        Scene scene = new Scene(root, 360, 400);
         scene.getStylesheets().add(getClass().getResource("dark-theme.css").toExternalForm());
         return scene;
     }
@@ -175,6 +218,7 @@ public class InventoryApp extends Application {
     private void promptAndSearchName() {
         String n = prompt("Enter product name:");
         Product p = inventory.searchByName(n);
+
         alert(p != null ? formatProduct(p) : "No product found.");
     }
 
@@ -191,16 +235,6 @@ public class InventoryApp extends Application {
     private void exportSingleReport() {
         String n = prompt("Enter product for report:");
         InventoryFileHandler.exportProductReport(inventory, n);
-    }
-
-    private void showSettings() {
-        if (pendingUsers.isEmpty()) {
-            alert("No pending registrations.");
-            return;
-        }
-        StringBuilder sb = new StringBuilder("Pending registrations:\n");
-        pendingUsers.forEach(u -> sb.append(u.getUsername()).append("\n"));
-        alert(sb.toString());
     }
 
     private void addProduct() {
@@ -224,56 +258,34 @@ public class InventoryApp extends Application {
     }
 
     private void sellProduct() {
-        // 1) Gather current products
         List<Product> products = inventory.getProducts();
-        if (products.isEmpty()) {
-            alert("No products available.");
-            return;
-        }
-        List<String> names = products.stream()
-                .map(Product::getName)
-                .collect(Collectors.toList());
-
-        // 2) Show ChoiceDialog to pick a product
+        if (products.isEmpty()) { alert("No products available."); return; }
+        List<String> names = products.stream().map(Product::getName).collect(Collectors.toList());
         ChoiceDialog<String> choice = new ChoiceDialog<>(names.get(0), names);
         styleDialog(choice);
         choice.setTitle("Sell Product");
         choice.setHeaderText("Select product to sell:");
         choice.showAndWait().ifPresent(selectedName -> {
             Product p = inventory.searchByName(selectedName);
-            if (p == null) {
-                alert("Product not found.");
-                return;
-            }
-
-            // 3) Prompt for quantity
+            if (p == null) { alert("Product not found."); return; }
             TextInputDialog qtyDlg = new TextInputDialog();
             styleDialog(qtyDlg);
             qtyDlg.setTitle("Quantity");
             qtyDlg.setHeaderText("Quantity to sell for \"" + p.getName() + "\":");
             qtyDlg.showAndWait().ifPresent(qtyText -> {
-                int qty;
                 try {
-                    qty = Integer.parseInt(qtyText.trim());
+                    int qty = Integer.parseInt(qtyText.trim());
+                    if (qty <= 0) alert("Quantity must be positive.");
+                    else if (qty > p.getQuantity()) alert("Not enough stock.");
+                    else {
+                        p.decreaseStock(qty);
+                        OrderItem item = new OrderItem(p.getName(), qty, p.getRetailPrice());
+                        Order ord = new Order(Collections.singletonList(item));
+                        orders.add(ord);
+                        alert(String.format("Sold %d x %s\nOrder Total: %.2f", qty, p.getName(), ord.getTotal()));
+                    }
                 } catch (NumberFormatException ex) {
                     alert("Please enter a valid number.");
-                    return;
-                }
-                if (qty <= 0) {
-                    alert("Quantity must be positive.");
-                } else if (qty > p.getQuantity()) {
-                    alert("Not enough stock.");
-                } else {
-                    // 4) Perform the sale
-                    p.decreaseStock(qty);
-                    OrderItem item = new OrderItem(p.getName(), qty, p.getRetailPrice());
-                    Order ord = new Order(Collections.singletonList(item));
-                    orders.add(ord);
-
-                    alert(String.format(
-                            "Sold %d x %s\nOrder Total: %.2f",
-                            qty, p.getName(), ord.getTotal()
-                    ));
                 }
             });
         });
@@ -282,7 +294,6 @@ public class InventoryApp extends Application {
     private void showInventoryTable() {
         TableView<Product> table = new TableView<>();
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-
         TableColumn<Product, String> nameCol = new TableColumn<>("Name");
         nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
         TableColumn<Product, String> catCol = new TableColumn<>("Category");
@@ -295,17 +306,13 @@ public class InventoryApp extends Application {
         costCol.setCellValueFactory(new PropertyValueFactory<>("costPrice"));
         TableColumn<Product, Double> priceCol = new TableColumn<>("Price");
         priceCol.setCellValueFactory(new PropertyValueFactory<>("retailPrice"));
-
         table.getColumns().setAll(nameCol, catCol, subCol, qtyCol, costCol, priceCol);
         table.setItems(FXCollections.observableArrayList(inventory.getProducts()));
-
         VBox box = new VBox(table);
         box.setPadding(new Insets(10));
-        box.setStyle("-fx-background-color: #2b2b2b;");
-
+        box.setStyle("-fx-background-color:#2b2b2b;");
         Scene scene = new Scene(box, 700, 400);
         scene.getStylesheets().add(getClass().getResource("dark-theme.css").toExternalForm());
-
         Stage dialog = new Stage();
         dialog.initOwner(primaryStage);
         dialog.setTitle("Inventory");
@@ -314,17 +321,22 @@ public class InventoryApp extends Application {
     }
 
     private String formatProduct(Product p) {
-        return String.format("%s | %s > %s | Qty:%d | Cost:%.2f | Price:%.2f",
-                p.getName(), p.getCategory(), p.getSubCategory(),
-                p.getQuantity(), p.getCostPrice(), p.getRetailPrice());
+        return String.format(
+                "%s | %s > %s | Qty: %d | Cost: %.2f | Price: %.2f",
+                p.getName(),
+                p.getCategory(),
+                p.getSubCategory(),
+                p.getQuantity(),
+                p.getCostPrice(),
+                p.getRetailPrice()
+        );
     }
-
     private String prompt(String msg) {
         TextInputDialog dlg = new TextInputDialog();
         styleDialog(dlg);
         dlg.setHeaderText(msg);
-        dlg.showAndWait();
-        return dlg.getEditor().getText().trim();
+        Optional<String> res = dlg.showAndWait();
+        return res.orElse("").trim();
     }
 
     private void alert(String msg) {
