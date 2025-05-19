@@ -1,7 +1,7 @@
 Full Inventory Report
 =====================
 
-5-30 | oil > engine | Qty: 191 | Cost: 5.99 | Price: 12.30
+5-30 | oil > engine | Qty: 0 | Cost: 5.99 | Price: 12.30
 
-TOTAL COST VALUE:   1144.09
-TOTAL RETAIL VALUE: 2349.30
+TOTAL COST VALUE:   0.00
+TOTAL RETAIL VALUE: 0.00
