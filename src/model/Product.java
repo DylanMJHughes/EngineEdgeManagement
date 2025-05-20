@@ -14,6 +14,7 @@ public class Product {
         this.costPrice = costPrice;
         this.retailPrice = retailPrice;
         this.quantity = quantity;
+        this.imagePath = imagePath;
     }
 
     public void increaseStock(int amt) { quantity += amt; }

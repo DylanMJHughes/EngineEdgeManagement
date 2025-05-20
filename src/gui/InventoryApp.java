@@ -8,6 +8,12 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.FileChooser;
 import java.io.File;
@@ -410,6 +416,35 @@ public class InventoryApp extends Application {
     private void showInventoryTable() {
         TableView<Product> table = new TableView<>();
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        TableColumn<Product,String> imgCol = new TableColumn<>("Image");
+        imgCol.setCellValueFactory(new PropertyValueFactory<>("imagePath"));
+        imgCol.setCellFactory(col -> new TableCell<>() {
+            private final ImageView view = new ImageView();
+            {
+                view.setFitWidth(50);
+                view.setFitHeight(50);
+                view.setPreserveRatio(true);
+            }
+            @Override
+            protected void updateItem(String path, boolean empty) {
+                super.updateItem(path, empty);
+                // temp debug
+                System.out.println("ROW " + getIndex() + " ⟶ path=" + path);
+                // temp debug
+                if (empty || path == null || path.isEmpty()) {
+                    setGraphic(null);
+                } else {
+                    try {
+                        view.setImage(new Image(path, 50, 50, true, true));
+                        setGraphic(view);
+                    } catch (Exception e) {
+                        setGraphic(null);
+                    }
+                }
+            }
+        });
+
         TableColumn<Product, String> nameCol = new TableColumn<>("Name");
         nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
         TableColumn<Product, String> catCol = new TableColumn<>("Category");
@@ -422,13 +457,15 @@ public class InventoryApp extends Application {
         costCol.setCellValueFactory(new PropertyValueFactory<>("costPrice"));
         TableColumn<Product, Double> priceCol = new TableColumn<>("Price");
         priceCol.setCellValueFactory(new PropertyValueFactory<>("retailPrice"));
-        table.getColumns().setAll(nameCol, catCol, subCol, qtyCol, costCol, priceCol);
+        table.getColumns().setAll(imgCol,nameCol, catCol, subCol, qtyCol, costCol, priceCol);
         table.setItems(FXCollections.observableArrayList(inventory.getProducts()));
+
         VBox box = new VBox(table);
         box.setPadding(new Insets(10));
         box.setStyle("-fx-background-color:#2b2b2b;");
         Scene scene = new Scene(box, 700, 400);
         scene.getStylesheets().add(getClass().getResource("dark-theme.css").toExternalForm());
+
         Stage dialog = new Stage();
         dialog.initOwner(primaryStage);
         dialog.setTitle("Inventory");
