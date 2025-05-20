@@ -17,8 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.Collections;
 import java.util.Optional;
-import java.util.stream.Stream;
-import java.util.stream.Collectors;
+
 
 public class InventoryApp extends Application {
     private Stage primaryStage;
@@ -84,9 +83,9 @@ public class InventoryApp extends Application {
             }
         }
         if (current == null) {
-            status.setText("❌ Invalid credentials");
+            status.setText("Invalid credentials");
         } else {
-            status.setText("✅ Welcome, " + current.getUsername());
+            status.setText("Welcome, " + current.getUsername());
             if ("admin".equals(current.getRole())) {
                 primaryStage.setScene(buildAdminScene(current));
             } else {
@@ -103,8 +102,8 @@ public class InventoryApp extends Application {
         if (!uOpt.isPresent()) return;
         String nu = uOpt.get().trim();
         if (nu.isEmpty()) return;
-        for (User ex : users) if (ex.getUsername().equals(nu)) { alert("❌ Username already taken."); return; }
-        for (User ex : pendingUsers) if (ex.getUsername().equals(nu)) { alert("❌ Registration pending."); return; }
+        for (User ex : users) if (ex.getUsername().equals(nu)) { alert("Username already taken."); return; }
+        for (User ex : pendingUsers) if (ex.getUsername().equals(nu)) { alert("Registration pending."); return; }
         TextInputDialog dlgP = new TextInputDialog();
         styleDialog(dlgP);
         dlgP.setHeaderText("Choose a password:");
@@ -202,7 +201,7 @@ public class InventoryApp extends Application {
                     .ifPresent(u -> {
                         pendingUsers.remove(u);
                         users.add(u);
-                        alert("✔ Approved: " + u.getUsername());
+                        alert("Approved: " + u.getUsername());
                         pendingView.getItems().remove(sel);
                     });
         });
@@ -219,7 +218,7 @@ public class InventoryApp extends Application {
                     .findFirst()
                     .ifPresent(u -> {
                         pendingUsers.remove(u);
-                        alert("✖ Disapproved: " + u.getUsername());
+                        alert("Disapproved: " + u.getUsername());
                         pendingView.getItems().remove(sel);
                     });
         });
@@ -247,7 +246,7 @@ public class InventoryApp extends Application {
             if (!pOpt.isPresent() || pOpt.get().trim().isEmpty()) return;
 
             users.add(new User(uOpt.get().trim(), pOpt.get().trim(), "standard"));
-            alert("✔ User added: " + uOpt.get().trim());
+            alert("User added: " + uOpt.get().trim());
         });
 
         // Delete an existing user
@@ -264,7 +263,7 @@ public class InventoryApp extends Application {
                     .findFirst();
             if (toDel.isPresent()) {
                 users.remove(toDel.get());
-                alert("✖ Deleted user: " + name);
+                alert("Deleted user: " + name);
             } else {
                 alert("User not found: " + name);
             }

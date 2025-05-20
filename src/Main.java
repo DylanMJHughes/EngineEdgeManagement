@@ -19,7 +19,7 @@ public class Main {
     private static List<Order> orders = new ArrayList<>();
 
     static {
-        // Seed initial users
+        // input initial users
         users.add(new User("admin", "admin", "admin"));
         users.add(new User("user",  "user",  "standard"));
     }
@@ -118,7 +118,7 @@ public class Main {
         System.out.println("✔ Registration submitted. Wait for admin approval.\n");
     }
 
-    //Admin menu with a Log out option.
+    //Admin menu with a Log-out option.
     private static void adminMenu(Inventory inv, Scanner scan, User me) {
         while (true) {
             System.out.println(
@@ -163,7 +163,7 @@ public class Main {
         }
     }
 
-    //Standard user menu with a Log out option.
+    //Standard user menu with a Log-out option.
     private static void standardMenu(Inventory inv, Scanner scan) {
         while (true) {
             System.out.println(
@@ -250,7 +250,7 @@ public class Main {
                 } else {
                     User approved = pendingUsers.remove(idx);
                     users.add(approved);
-                    System.out.println("✔ Approved: " + approved.getUsername() + "\n");
+                    System.out.println(" Approved: " + approved.getUsername() + "\n");
                 }
             } catch (NumberFormatException e) {
                 System.out.println("Invalid input.\n");
@@ -274,7 +274,7 @@ public class Main {
         System.out.print("Quantity: ");
         int qty = Integer.parseInt(scan.nextLine());
         inv.addProduct(new Product(name, cat, sub, cost, price, qty));
-        System.out.println("→ Product added!\n");
+        System.out.println(" Product added!\n");
     }
 
     private static void restockProduct(Inventory inv, Scanner scan) {
@@ -282,7 +282,7 @@ public class Main {
         String name = scan.nextLine();
         Product p = inv.searchByName(name);
         if (p == null) {
-            System.out.println("✖ No such product.\n");
+            System.out.println("No such product.\n");
             return;
         }
         System.out.print("Quantity to add: ");
@@ -290,11 +290,11 @@ public class Main {
         try {
             qty = Integer.parseInt(scan.nextLine());
         } catch (NumberFormatException e) {
-            System.out.println("✖ Invalid number.\n");
+            System.out.println("Invalid number.\n");
             return;
         }
         p.increaseStock(qty);
-        System.out.println("✔ Restocked. New quantity: " + p.getQuantity() + "\n");
+        System.out.println("Restocked. New quantity: " + p.getQuantity() + "\n");
     }
 
     private static void searchByName(Inventory inv, Scanner scan) {
@@ -321,13 +321,13 @@ public class Main {
         String prodName = scan.nextLine();
         Product prod = inv.searchByName(prodName);
         if (prod == null) {
-            System.out.println("✖ No such product.\n");
+            System.out.println("No such product.\n");
             return;
         }
         System.out.print("Quantity to sell: ");
         int qty = Integer.parseInt(scan.nextLine());
         if (qty > prod.getQuantity()) {
-            System.out.println("✖ Not enough stock.\n");
+            System.out.println("Not enough stock.\n");
             return;
         }
         prod.decreaseStock(qty);
@@ -336,7 +336,7 @@ public class Main {
         items.add(item);
         Order order = new Order(items);
         orders.add(order);
-        System.out.println("✔ Product sold:");
+        System.out.println("Product sold:");
         order.printOrder();
         System.out.println();
     }
@@ -346,7 +346,7 @@ public class Main {
         String username = scan.nextLine();
         for (User u : users) {
             if (u.getUsername().equals(username)) {
-                System.out.println("✖ User already exists.\n");
+                System.out.println("User already exists.\n");
                 return;
             }
         }
@@ -360,14 +360,14 @@ public class Main {
             System.out.println("Invalid role, try again.");
         }
         users.add(new User(username, password, role));
-        System.out.println("✔ User added: " + username + " (" + role + ")\n");
+        System.out.println("User added: " + username + " (" + role + ")\n");
     }
 
     private static void deleteUser(Scanner scan, User currentUser) {
         System.out.print("Username to delete: ");
         String username = scan.nextLine();
         if (username.equals(currentUser.getUsername())) {
-            System.out.println("✖ Cannot delete yourself.\n");
+            System.out.println("Cannot delete yourself.\n");
             return;
         }
         User toRemove = null;
@@ -378,10 +378,10 @@ public class Main {
             }
         }
         if (toRemove == null) {
-            System.out.println("✖ No such user.\n");
+            System.out.println("No such user.\n");
         } else {
             users.remove(toRemove);
-            System.out.println("✔ User deleted: " + username + "\n");
+            System.out.println("User deleted: " + username + "\n");
         }
     }
 
@@ -393,4 +393,3 @@ public class Main {
         System.out.println();
     }
 }
-// update
