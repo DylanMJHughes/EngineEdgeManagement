@@ -1,14 +1,22 @@
-import model.Inventory;
-import model.Product;
-import model.User;
-import model.Order;
-import model.OrderItem;
+import model.*;
 import utils.InventoryFileHandler;
 import utils.OrderFileHandler;
+
 
 import java.util.Scanner;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.stream.Stream;
+
+import model.Body;
+import model.Cooling;
+import model.Electrical;
+import model.Engine;
+import model.Exhaust;
+import model.Fuel;
+import model.Suspension;
+import model.Transmission;
+import model.CategoryType;
 
 public class Main {
     //In-memory approved users
@@ -261,26 +269,77 @@ public class Main {
     //Existing Helper Methods
 
     private static void addProduct(Inventory inv, Scanner scan) {
+        // 1) Ask for category and map it to your enum
+        System.out.print("Category ("
+                + String.join(", ",
+                Stream.of(CategoryType.values())
+                        .map(Enum::name)
+                        .toArray(String[]::new))
+                + "): ");
+        String catInput = scan.nextLine().trim().toUpperCase();
+        CategoryType catType;
+        try {
+            catType = CategoryType.valueOf(catInput);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Unknown category. Aborting.\n");
+            return;
+        }
+
+        // 2) Gather the rest as before
         System.out.print("Name: ");
         String name = scan.nextLine();
-        System.out.print("Category: ");
-        String cat = scan.nextLine();
         System.out.print("Sub-category: ");
-        String sub = scan.nextLine();
+        String sub  = scan.nextLine();
         System.out.print("Cost Price: ");
         double cost = Double.parseDouble(scan.nextLine());
         System.out.print("Retail Price: ");
         double price = Double.parseDouble(scan.nextLine());
         System.out.print("Quantity: ");
-        int qty = Integer.parseInt(scan.nextLine());
+        int qty     = Integer.parseInt(scan.nextLine());
+        System.out.print("Image path (leave blank): ");
+        String img  = scan.nextLine().trim();
+        String imgPath = img.isEmpty() ? null : img;
 
-        System.out.print("Image path (file://... or local absolute path, leave blank for none): ");
-        String imgPath = scan.nextLine().trim();
-        // pass null if user skipped
-        Product p = new Product(name, cat, sub, cost, price, qty, imgPath.isEmpty() ? null : imgPath);
+        // 3) Instantiate the correct subclass
+        Product p;
+        switch (catType) {
+            case Engine:
+                p = new Engine(name, sub, cost, price, qty, imgPath);
+                break;
+            case Transmission:
+                p = new Transmission(name, sub, cost, price, qty, imgPath);
+                break;
+            case Suspension:
+                p = new Suspension(name, sub, cost, price, qty, imgPath);
+                break;
+            case Brakes:
+                p = new Brakes(name, sub, cost, price, qty, imgPath);
+                break;
+            case Electrical:
+                p = new Electrical(name, sub, cost, price, qty, imgPath);
+                break;
+            case Cooling:
+                p = new Cooling(name, sub, cost, price, qty, imgPath);
+                break;
+            case Exhaust:
+                p = new Exhaust(name, sub, cost, price, qty, imgPath);
+                break;
+            case Fuel:
+                p = new Fuel(name, sub, cost, price, qty, imgPath);
+                break;
+            case Body:
+                p = new Body(name, sub, cost, price, qty, imgPath);
+                break;
+            default:
+                // should never happen
+                System.out.println("Unhandled category.\n");
+                return;
+        }
+
         inv.addProduct(p);
-        System.out.println(" Product added!\n");
+        System.out.println("✔ Product added: " + p.getCategoryType() + " – " + p.getName() + "\n");
     }
+
 
     private static void restockProduct(Inventory inv, Scanner scan) {
         System.out.print("Product name to restock: ");

@@ -26,6 +26,18 @@ import java.util.stream.Collectors;
 import java.util.Collections;
 import java.util.Optional;
 
+import model.CategoryType;
+import model.Engine;
+import model.Transmission;
+import model.Suspension;
+import model.Electrical;
+import model.Cooling;
+import model.Exhaust;
+import model.Fuel;
+import model.Body;
+import javafx.scene.control.ChoiceDialog;
+import javafx.beans.property.SimpleStringProperty;
+
 
 public class InventoryApp extends Application {
     private Stage primaryStage;
@@ -338,37 +350,72 @@ public class InventoryApp extends Application {
     }
 
     private void addProduct() {
+        // 1) Let user pick one of your enum categories
+        ChoiceDialog<CategoryType> dlg = new ChoiceDialog<>(
+                CategoryType.Engine,           // default selection
+                CategoryType.values()          // all values
+        );
+        dlg.setHeaderText("Select Category:");
+        dlg.initOwner(primaryStage);
+        Optional<CategoryType> catOpt = dlg.showAndWait();
+        if (catOpt.isEmpty()) return;      // user cancelled
+        CategoryType catType = catOpt.get();
+
+        // 2) Gather the rest of the info
         String name  = prompt("Product name:");
-        String cat   = prompt("Category:");
         String sub   = prompt("Sub-category:");
         double cost  = Double.parseDouble(prompt("Cost Price:"));
         double price = Double.parseDouble(prompt("Retail Price:"));
         int qty      = Integer.parseInt(prompt("Quantity:"));
 
-        // 2) NEW: let user pick an image file
+        // 3) Let user pick an image file (optional)
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Select Product Image (optional)");
         chooser.getExtensionFilters().add(
                 new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.gif")
         );
         File file = chooser.showOpenDialog(primaryStage);
-        String imgPath = (file != null)
-                ? file.toURI().toString()   // JavaFX Image can load from a URI
-                : null;
+        String imgPath = (file != null) ? file.toURI().toString() : null;
 
-        // 3) Use the new constructor
-        Product p = new Product(
-                name,
-                cat,
-                sub,
-                cost,
-                price,
-                qty,
-                imgPath
-        );
+        // 4) Instantiate the right subclass
+        Product p;
+        switch (catType) {
+            case Engine:
+                p = new Engine(name, sub, cost, price, qty, imgPath);
+                break;
+            case Transmission:
+                p = new Transmission(name, sub, cost, price, qty, imgPath);
+                break;
+            case Suspension:
+                p = new Suspension(name, sub, cost, price, qty, imgPath);
+                break;
+            case Brakes:
+                p = new Brakes(name, sub, cost, price, qty, imgPath);
+                break;
+            case Electrical:
+                p = new Electrical(name, sub, cost, price, qty, imgPath);
+                break;
+            case Cooling:
+                p = new Cooling(name, sub, cost, price, qty, imgPath);
+                break;
+            case Exhaust:
+                p = new Exhaust(name, sub, cost, price, qty, imgPath);
+                break;
+            case Fuel:
+                p = new Fuel(name, sub, cost, price, qty, imgPath);
+                break;
+            case Body:
+                p = new Body(name, sub, cost, price, qty, imgPath);
+                break;
+            default:
+                throw new IllegalStateException("Unhandled category: " + catType);
+        }
+
+        // 5) Add and notify
         inventory.addProduct(p);
-        alert("Product added successfully!");
+        alert("✔ Product added: " + catType + " – " + name);
     }
+
 
     private void restockProduct() {
         String name = prompt("Product to restock:");
@@ -429,9 +476,6 @@ public class InventoryApp extends Application {
             @Override
             protected void updateItem(String path, boolean empty) {
                 super.updateItem(path, empty);
-                // temp debug
-                System.out.println("ROW " + getIndex() + " ⟶ path=" + path);
-                // temp debug
                 if (empty || path == null || path.isEmpty()) {
                     setGraphic(null);
                 } else {
@@ -447,17 +491,27 @@ public class InventoryApp extends Application {
 
         TableColumn<Product, String> nameCol = new TableColumn<>("Name");
         nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
+
         TableColumn<Product, String> catCol = new TableColumn<>("Category");
-        catCol.setCellValueFactory(new PropertyValueFactory<>("category"));
+        catCol.setCellValueFactory(cellData ->
+                new SimpleStringProperty(
+                        cellData.getValue().getCategoryType().name()
+                )
+        );
+
         TableColumn<Product, String> subCol = new TableColumn<>("Sub-category");
         subCol.setCellValueFactory(new PropertyValueFactory<>("subCategory"));
+
         TableColumn<Product, Integer> qtyCol = new TableColumn<>("Qty");
         qtyCol.setCellValueFactory(new PropertyValueFactory<>("quantity"));
+
         TableColumn<Product, Double> costCol = new TableColumn<>("Cost");
         costCol.setCellValueFactory(new PropertyValueFactory<>("costPrice"));
+
         TableColumn<Product, Double> priceCol = new TableColumn<>("Price");
         priceCol.setCellValueFactory(new PropertyValueFactory<>("retailPrice"));
-        table.getColumns().setAll(imgCol,nameCol, catCol, subCol, qtyCol, costCol, priceCol);
+
+        table.getColumns().setAll(imgCol, nameCol, catCol, subCol, qtyCol, costCol, priceCol);
         table.setItems(FXCollections.observableArrayList(inventory.getProducts()));
 
         VBox box = new VBox(table);
@@ -490,7 +544,7 @@ public class InventoryApp extends Application {
                         "Retail Price: %.2f%n" +
                         "Quantity: %d",
                 p.getName(),
-                p.getCategory(),
+
                 p.getSubCategory(),
                 p.getCostPrice(),
                 p.getRetailPrice(),

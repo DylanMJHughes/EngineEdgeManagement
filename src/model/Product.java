@@ -1,37 +1,72 @@
 package model;
 
-public class Product {
-    private String name, category, subCategory;
-    private double costPrice, retailPrice;
+import model.CategoryType;
+import model.SubCategoryType;
+
+public abstract class Product {
+
+    private String name;
+    private double costPrice;
+    private double retailPrice;
     private int quantity;
     private String imagePath;
 
-    public Product(String name, String category, String subCategory,
-                   double costPrice, double retailPrice, int quantity, String imagePath) {
-        this.name = name;
-        this.category = category;
-        this.subCategory = subCategory;
-        this.costPrice = costPrice;
+    // Constructor including image path
+    public Product(String name,
+                   double costPrice,
+                   double retailPrice,
+                   int quantity,
+                   String imagePath) {
+        this.name        = name;
+        this.costPrice   = costPrice;
         this.retailPrice = retailPrice;
-        this.quantity = quantity;
-        this.imagePath = imagePath;
+        this.quantity    = quantity;
+        this.imagePath   = imagePath;
     }
 
-    public void increaseStock(int amt) { quantity += amt; }
-    public void decreaseStock(int amt) { quantity -= amt; }
 
+     // Convenience constructor without image
+    public Product(String name,
+                   double costPrice,
+                   double retailPrice,
+                   int quantity) {
+        this(name, costPrice, retailPrice, quantity, null);
+    }
+
+    // Each subclass defines its top-level category
+    public abstract CategoryType getCategoryType();
+
+    // Each subclass defines its sub-category
+    public abstract SubCategoryType getSubCategoryType();
+
+    //Increase stock by a given amount
+
+    public void increaseStock(int amt) {
+        this.quantity += amt;
+    }
+
+    // Decrease stock by a given amount
+    public void decreaseStock(int amt) {
+        this.quantity -= amt;
+    }
+
+    // Getters
+    public String getName()           { return name; }
+    public int    getQuantity()       { return quantity; }
+    public double getCostPrice()      { return costPrice; }
+    public double getRetailPrice()    { return retailPrice; }
+    public String getImagePath()      { return imagePath; }
+
+    // print
     public void printDetails() {
-        System.out.printf("%s | %s > %s | Qty: %d | Cost: %.2f | Price: %.2f%n",
-                name, category, subCategory, quantity, costPrice, retailPrice);
+        System.out.printf(
+                "%s [%s > %s] Qty: %d | Cost: %.2f | Price: %.2f%n",
+                name,
+                getCategoryType().name(),
+                getSubCategoryType().name(),
+                quantity,
+                costPrice,
+                retailPrice
+        );
     }
-    /** go getters **/
-    public String getName()     {return name; }
-    public String getCategory()     {return category; }
-    public String getSubCategory() { return subCategory; }
-    public double getCostPrice()   { return costPrice; }
-    public double getRetailPrice() { return retailPrice; }
-    public int getQuantity()       { return quantity; }
-    public String getImagePath()   { return imagePath; }
 }
-
-

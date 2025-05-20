@@ -19,7 +19,7 @@ public class Inventory {
         }
     }
 
-    /** the persistence go getters **/
+    /**go getters **/
     public ArrayList<Product> getProducts() {
         return products;
     }
@@ -37,7 +37,8 @@ public class Inventory {
     public void searchByCategory(String category) {
         boolean found = false;
         for (Product p : products) {
-            if (p.getCategory().equalsIgnoreCase(category)) {
+            // compare the enum name to the user’s string (case‐insensitive)
+            if (p.getCategoryType().name().equalsIgnoreCase(category.trim())) {
                 p.printDetails();
                 found = true;
             }
