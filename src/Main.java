@@ -273,7 +273,12 @@ public class Main {
         double price = Double.parseDouble(scan.nextLine());
         System.out.print("Quantity: ");
         int qty = Integer.parseInt(scan.nextLine());
-        inv.addProduct(new Product(name, cat, sub, cost, price, qty));
+
+        System.out.print("Image path (file://... or local absolute path, leave blank for none): ");
+        String imgPath = scan.nextLine().trim();
+        // pass null if user skipped
+        Product p = new Product(name, cat, sub, cost, price, qty, imgPath.isEmpty() ? null : imgPath);
+        inv.addProduct(p);
         System.out.println(" Product added!\n");
     }
 

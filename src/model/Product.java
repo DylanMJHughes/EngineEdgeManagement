@@ -4,9 +4,10 @@ public class Product {
     private String name, category, subCategory;
     private double costPrice, retailPrice;
     private int quantity;
+    private String imagePath;
 
     public Product(String name, String category, String subCategory,
-                   double costPrice, double retailPrice, int quantity) {
+                   double costPrice, double retailPrice, int quantity, String imagePath) {
         this.name = name;
         this.category = category;
         this.subCategory = subCategory;
@@ -29,6 +30,7 @@ public class Product {
     public double getCostPrice()   { return costPrice; }
     public double getRetailPrice() { return retailPrice; }
     public int getQuantity()       { return quantity; }
+    public String getImagePath()   { return imagePath; }
 }
 
 

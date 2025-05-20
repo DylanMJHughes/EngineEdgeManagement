@@ -9,6 +9,8 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import javafx.stage.FileChooser;
+import java.io.File;
 import model.*;
 import utils.*;
 
@@ -330,13 +332,35 @@ public class InventoryApp extends Application {
     }
 
     private void addProduct() {
-        String name = prompt("Product name:");
-        String cat = prompt("Category:");
-        String sub = prompt("Sub-category:");
-        double cost = Double.parseDouble(prompt("Cost Price:"));
+        String name  = prompt("Product name:");
+        String cat   = prompt("Category:");
+        String sub   = prompt("Sub-category:");
+        double cost  = Double.parseDouble(prompt("Cost Price:"));
         double price = Double.parseDouble(prompt("Retail Price:"));
-        int qty = Integer.parseInt(prompt("Quantity:"));
-        inventory.addProduct(new Product(name, cat, sub, cost, price, qty));
+        int qty      = Integer.parseInt(prompt("Quantity:"));
+
+        // 2) NEW: let user pick an image file
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Select Product Image (optional)");
+        chooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.gif")
+        );
+        File file = chooser.showOpenDialog(primaryStage);
+        String imgPath = (file != null)
+                ? file.toURI().toString()   // JavaFX Image can load from a URI
+                : null;
+
+        // 3) Use the new constructor
+        Product p = new Product(
+                name,
+                cat,
+                sub,
+                cost,
+                price,
+                qty,
+                imgPath
+        );
+        inventory.addProduct(p);
         alert("Product added successfully!");
     }
 

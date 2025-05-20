@@ -26,7 +26,8 @@ public class InventoryFileHandler {
                 double cost  = Double.parseDouble(parts[3]);
                 double price = Double.parseDouble(parts[4]);
                 int qty      = Integer.parseInt(parts[5]);
-                inv.addProduct(new Product(name, cat, sub, cost, price, qty));
+                String imgPath = parts[6].isEmpty() ? null : parts[6];
+                inv.addProduct(new Product(name, cat, sub, cost, price, qty,imgPath));
             }
         } catch (IOException e) {
             System.err.println("Error loading inventory: " + e.getMessage());
@@ -43,7 +44,8 @@ public class InventoryFileHandler {
                         p.getSubCategory(),
                         p.getCostPrice(),
                         p.getRetailPrice(),
-                        p.getQuantity()
+                        p.getQuantity(),
+                        p.getImagePath() != null ? p.getImagePath() : ""
                 );
             }
         } catch (IOException e) {
