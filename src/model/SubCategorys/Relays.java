@@ -3,8 +3,8 @@ package model.SubCategorys;
 import model.Body;
 import model.SubCategoryType;
 
-public class BrakeMasterCylinder extends Body {
-    public BrakeMasterCylinder (String name,
+public class Relays extends Body {
+    public Relays (String name,
                                double costPrice,
                                double retailPrice,
                                int quantity,
@@ -14,6 +14,6 @@ public class BrakeMasterCylinder extends Body {
 
     @Override
     public SubCategoryType getSubCategoryType() {
-        return SubCategoryType.BrakeMasterCylinder;
+        return SubCategoryType.Relays;
     }
 }

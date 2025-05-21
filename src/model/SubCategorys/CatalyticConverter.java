@@ -1,10 +1,12 @@
+//CatalyticConverter
+
 package model.SubCategorys;
 
 import model.Body;
 import model.SubCategoryType;
 
-public class BrakeMasterCylinder extends Body {
-    public BrakeMasterCylinder (String name,
+public class CatalyticConverter extends Body {
+    public CatalyticConverter(String name,
                                double costPrice,
                                double retailPrice,
                                int quantity,
@@ -14,6 +16,8 @@ public class BrakeMasterCylinder extends Body {
 
     @Override
     public SubCategoryType getSubCategoryType() {
-        return SubCategoryType.BrakeMasterCylinder;
+        return SubCategoryType.CatalyticConverter;
     }
 }
+
+

@@ -1,10 +1,11 @@
+
 package model.SubCategorys;
 
 import model.Body;
 import model.SubCategoryType;
 
-public class BrakeMasterCylinder extends Body {
-    public BrakeMasterCylinder (String name,
+public class FuelFilter extends Body {
+    public FuelFilter(String name,
                                double costPrice,
                                double retailPrice,
                                int quantity,
@@ -14,6 +15,7 @@ public class BrakeMasterCylinder extends Body {
 
     @Override
     public SubCategoryType getSubCategoryType() {
-        return SubCategoryType.BrakeMasterCylinder;
+        return SubCategoryType.FuelFilter;
     }
 }
+

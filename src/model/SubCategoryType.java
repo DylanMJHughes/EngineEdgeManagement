@@ -41,8 +41,7 @@ public enum SubCategoryType {
     EngineOilFilter,
     OilPump,
     SparkPlugsIgnitionCoils,
-    DIESEL,
-    PETROL,
+    TimingBelt,
 
     //Exhaust:
     ExhaustManifold,

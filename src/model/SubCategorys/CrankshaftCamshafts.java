@@ -1,10 +1,11 @@
+//CrankShaftCamshafts
 package model.SubCategorys;
 
 import model.Body;
 import model.SubCategoryType;
 
-public class BrakeMasterCylinder extends Body {
-    public BrakeMasterCylinder (String name,
+public class CrankshaftCamshafts extends Body {
+    public CrankshaftCamshafts(String name,
                                double costPrice,
                                double retailPrice,
                                int quantity,
@@ -14,6 +15,6 @@ public class BrakeMasterCylinder extends Body {
 
     @Override
     public SubCategoryType getSubCategoryType() {
-        return SubCategoryType.BrakeMasterCylinder;
+        return SubCategoryType.CrankshaftCamshafts;
     }
 }
