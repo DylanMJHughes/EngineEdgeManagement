@@ -1,33 +1,16 @@
 import model.*;
+import model.Categorys.*;
 import utils.InventoryFileHandler;
 import utils.OrderFileHandler;
 
-
-import java.util.Scanner;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.stream.Stream;
-
-import model.Body;
-import model.Cooling;
-import model.Electrical;
-import model.Engine;
-import model.Exhaust;
-import model.Fuel;
-import model.Suspension;
-import model.Transmission;
-import model.CategoryType;
+import java.util.*;
 
 public class Main {
-    //In-memory approved users
     private static List<User> users = new ArrayList<>();
-    //In-memory pending registrations
     private static List<User> pendingUsers = new ArrayList<>();
-    //In-memory orders
     private static List<Order> orders = new ArrayList<>();
 
     static {
-        // input initial users
         users.add(new User("admin", "admin", "admin"));
         users.add(new User("user",  "user",  "standard"));
     }
@@ -40,7 +23,6 @@ public class Main {
         Scanner scan = new Scanner(System.in);
         boolean running = true;
 
-        // Top-level loop: Login/Register/Quit
         while (running) {
             User currentUser = null;
             while (currentUser == null && running) {
@@ -48,46 +30,36 @@ public class Main {
                 System.out.println("2) Register");
                 System.out.println("3) Quit");
                 System.out.print("> ");
-                String mode = scan.nextLine();
+                String mode = scan.nextLine().trim();
                 switch (mode) {
-                    case "1":
-                        currentUser = login(scan);
-                        break;
-                    case "2":
-                        registerNewUser(scan);
-                        break;
-                    case "3":
-                        running = false;
-                        break;
-                    default:
-                        System.out.println("Invalid choice.\n");
+                    case "1": currentUser = login(scan); break;
+                    case "2": registerNewUser(scan); break;
+                    case "3": running = false; break;
+                    default:  System.out.println("Invalid choice.\n");
                 }
             }
             if (!running) break;
 
-            // User is logged in—show their menu
-            if (currentUser.getRole().equals("admin")) {
+            if ("admin".equals(currentUser.getRole())) {
                 adminMenu(inv, scan, currentUser);
             } else {
                 standardMenu(inv, scan);
             }
         }
 
-        // Save on exit
         InventoryFileHandler.saveInventory(inv);
         OrderFileHandler.saveOrders(orders);
         scan.close();
         System.out.println("Inventory and orders saved. Goodbye!");
     }
 
-    //Prompt for existing user login
     private static User login(Scanner scan) {
         User currentUser = null;
         while (currentUser == null) {
             System.out.print("Username: ");
-            String u = scan.nextLine();
+            String u = scan.nextLine().trim();
             System.out.print("Password: ");
-            String p = scan.nextLine();
+            String p = scan.nextLine().trim();
             for (User usr : users) {
                 if (usr.getUsername().equals(u) && usr.getPassword().equals(p)) {
                     currentUser = usr;
@@ -98,16 +70,14 @@ public class Main {
                 System.out.println("✖ Invalid credentials, try again.\n");
             }
         }
-        System.out.println("✔ Welcome "
-                + currentUser.getUsername()
-                + " (" + currentUser.getRole() + ")\n");
+        System.out.println("✔ Welcome " + currentUser.getUsername() + " (" + currentUser.getRole() + ")\n");
         return currentUser;
     }
 
-    //Self-service registration: adds user to pending list.
     private static void registerNewUser(Scanner scan) {
         System.out.print("Choose a username: ");
-        String u = scan.nextLine();
+        String u = scan.nextLine().trim();
+        if (u.isEmpty()) return;
         for (User existing : users) {
             if (existing.getUsername().equals(u)) {
                 System.out.println("✖ Username taken. Try again later.\n");
@@ -121,12 +91,11 @@ public class Main {
             }
         }
         System.out.print("Choose a password: ");
-        String p = scan.nextLine();
+        String p = scan.nextLine().trim();
         pendingUsers.add(new User(u, p, "standard"));
         System.out.println("✔ Registration submitted. Wait for admin approval.\n");
     }
 
-    //Admin menu with a Log-out option.
     private static void adminMenu(Inventory inv, Scanner scan, User me) {
         while (true) {
             System.out.println(
@@ -143,35 +112,30 @@ public class Main {
                             "10. Settings\n" +
                             "11. Log out"
             );
-            String choice = scan.nextLine();
+            System.out.print("> ");
+            String choice = scan.nextLine().trim();
             switch (choice) {
-                case "1": addProduct(inv, scan);                   break;
-                case "2": restockProduct(inv, scan);               break;
-                case "3": inv.showInventory();                     break;
-                case "4": sellProduct(inv, scan);                  break;
-                case "5": searchByName(inv, scan);                 break;
-                case "6": searchByCategory(inv, scan);             break;
-                case "7": searchBySubCategory(inv, scan);          break;
+                case "1": addProduct(inv, scan); break;
+                case "2": restockProduct(inv, scan); break;
+                case "3": inv.showInventory(); break;
+                case "4": sellProduct(inv, scan); break;
+                case "5": searchByName(inv, scan); break;
+                case "6": searchByCategory(inv, scan); break;
+                case "7": searchBySubCategory(inv, scan); break;
                 case "8":
                     System.out.print("Enter product name: ");
-                    InventoryFileHandler.exportProductReport(inv, scan.nextLine());
+                    InventoryFileHandler.exportProductReport(inv, scan.nextLine().trim());
                     break;
                 case "9":
                     InventoryFileHandler.exportFullInventoryReport(inv);
                     break;
-                case "10":
-                    settingsMenu(scan, me);
-                    break;
-                case "11":
-                    System.out.println("Logging out...\n");
-                    return;
-                default:
-                    System.out.println("Invalid choice, try again.\n");
+                case "10": settingsMenu(scan, me); break;
+                case "11": System.out.println("Logging out...\n"); return;
+                default:  System.out.println("Invalid choice, try again.\n");
             }
         }
     }
 
-    //Standard user menu with a Log-out option.
     private static void standardMenu(Inventory inv, Scanner scan) {
         while (true) {
             System.out.println(
@@ -186,31 +150,26 @@ public class Main {
                             "8. Export Full Inventory Report\n" +
                             "9. Log out"
             );
-            String choice = scan.nextLine();
+            System.out.print("> ");
+            String choice = scan.nextLine().trim();
             switch (choice) {
-                case "1": sellProduct(inv, scan);                  break;
-                case "2": restockProduct(inv, scan);               break;
-                case "3": inv.showInventory();                     break;
-                case "4": searchByName(inv, scan);                 break;
-                case "5": searchByCategory(inv, scan);             break;
-                case "6": searchBySubCategory(inv, scan);          break;
+                case "1": sellProduct(inv, scan); break;
+                case "2": restockProduct(inv, scan); break;
+                case "3": inv.showInventory(); break;
+                case "4": searchByName(inv, scan); break;
+                case "5": searchByCategory(inv, scan); break;
+                case "6": searchBySubCategory(inv, scan); break;
                 case "7":
                     System.out.print("Enter product name: ");
-                    InventoryFileHandler.exportProductReport(inv, scan.nextLine());
+                    InventoryFileHandler.exportProductReport(inv, scan.nextLine().trim());
                     break;
-                case "8":
-                    InventoryFileHandler.exportFullInventoryReport(inv);
-                    break;
-                case "9":
-                    System.out.println("Logging out...\n");
-                    return;
-                default:
-                    System.out.println("Invalid choice, try again.\n");
+                case "8": InventoryFileHandler.exportFullInventoryReport(inv); break;
+                case "9": System.out.println("Logging out...\n"); return;
+                default:  System.out.println("Invalid choice, try again.\n");
             }
         }
     }
 
-    //Settings menu for admin (includes approving registrations).
     private static void settingsMenu(Scanner scan, User currentUser) {
         while (true) {
             System.out.println(
@@ -221,19 +180,19 @@ public class Main {
                             "4. Approve Registrations\n" +
                             "5. Back to Main Menu"
             );
-            String choice = scan.nextLine();
+            System.out.print("> ");
+            String choice = scan.nextLine().trim();
             switch (choice) {
-                case "1": addUser(scan);                 break;
+                case "1": addUser(scan); break;
                 case "2": deleteUser(scan, currentUser); break;
-                case "3": listUsers();                   break;
-                case "4": approveRegistrations(scan);    break;
+                case "3": listUsers(); break;
+                case "4": approveRegistrations(scan); break;
                 case "5": return;
                 default:  System.out.println("Invalid choice.\n");
             }
         }
     }
 
-    //Admin helper: approve pending registrations.
     private static void approveRegistrations(Scanner scan) {
         if (pendingUsers.isEmpty()) {
             System.out.println("No pending registrations.\n");
@@ -242,20 +201,16 @@ public class Main {
         while (true) {
             System.out.println("Pending registrations:");
             for (int i = 0; i < pendingUsers.size(); i++) {
-                System.out.printf("%d) %s%n", i + 1, pendingUsers.get(i).getUsername());
+                System.out.printf("%d) %s\n", i+1, pendingUsers.get(i).getUsername());
             }
             System.out.println("A) Approve by number   B) Back");
             System.out.print("> ");
-            String inp = scan.nextLine();
-            if (inp.equalsIgnoreCase("B")) {
-                System.out.println();
-                return;
-            }
+            String inp = scan.nextLine().trim();
+            if (inp.equalsIgnoreCase("B")) { System.out.println(); return; }
             try {
                 int idx = Integer.parseInt(inp) - 1;
-                if (idx < 0 || idx >= pendingUsers.size()) {
-                    System.out.println("Invalid number.\n");
-                } else {
+                if (idx < 0 || idx >= pendingUsers.size()) System.out.println("Invalid number.\n");
+                else {
                     User approved = pendingUsers.remove(idx);
                     users.add(approved);
                     System.out.println(" Approved: " + approved.getUsername() + "\n");
@@ -266,161 +221,118 @@ public class Main {
         }
     }
 
-    //Existing Helper Methods
-
     private static void addProduct(Inventory inv, Scanner scan) {
-        // 1) Ask for category and map it to your enum
-        System.out.print("Category ("
-                + String.join(", ",
-                Stream.of(CategoryType.values())
-                        .map(Enum::name)
-                        .toArray(String[]::new))
-                + "): ");
-        String catInput = scan.nextLine().trim().toUpperCase();
+        System.out.println("Available categories: " + Arrays.toString(CategoryType.values()));
+        System.out.print("Select category: ");
+        String catStr = scan.nextLine().trim().toUpperCase();
         CategoryType catType;
+        try { catType = CategoryType.valueOf(catStr); }
+        catch (IllegalArgumentException e) { System.out.println("Invalid category.\n"); return; }
+
+        System.out.print("Product name: ");
+        String name = scan.nextLine().trim();
+        System.out.println("Available sub-categories: " + Arrays.toString(SubCategoryType.values()));
+        System.out.print("Select sub-category: ");
+        String subStr = scan.nextLine().trim().toUpperCase();
+        SubCategoryType subType;
+        try { subType = SubCategoryType.valueOf(subStr); }
+        catch (IllegalArgumentException e) { System.out.println("Invalid sub-category.\n"); return; }
+
         try {
-            catType = CategoryType.valueOf(catInput);
-        } catch (IllegalArgumentException e) {
-            System.out.println("Unknown category. Aborting.\n");
-            return;
+            System.out.print("Cost Price: ");
+            double cost  = Double.parseDouble(scan.nextLine().trim());
+            System.out.print("Retail Price: ");
+            double price = Double.parseDouble(scan.nextLine().trim());
+            System.out.print("Quantity: ");
+            int qty      = Integer.parseInt(scan.nextLine().trim());
+
+            Product p;
+            switch (catType) {
+                case Engine:       p = new Engine(name, subType, cost, price, qty, null); break;
+                case Transmission: p = new Transmission(name, subType, cost, price, qty, null); break;
+                case Suspension:   p = new Suspension(name, subType, cost, price, qty, null); break;
+                case Brakes:       p = new Brakes(name, subType, cost, price, qty, null); break;
+                case Electrical:   p = new Electrical(name, subType, cost, price, qty, null); break;
+                case Cooling:      p = new Cooling(name, subType, cost, price, qty, null); break;
+                case Exhaust:      p = new Exhaust(name, subType, cost, price, qty, null); break;
+                case Fuel:         p = new Fuel(name, subType, cost, price, qty, null); break;
+                case Body:         p = new Body(name, subType, cost, price, qty, null); break;
+                default:           throw new IllegalStateException("Unhandled category: " + catType);
+            }
+            inv.addProduct(p);
+            System.out.println("✔ Product added: " + p.getCategoryType() + " – " + p.getName() + "\n");
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid number input.\n");
         }
-
-        // 2) Gather the rest as before
-        System.out.print("Name: ");
-        String name = scan.nextLine();
-        System.out.print("Sub-category: ");
-        String sub  = scan.nextLine();
-        System.out.print("Cost Price: ");
-        double cost = Double.parseDouble(scan.nextLine());
-        System.out.print("Retail Price: ");
-        double price = Double.parseDouble(scan.nextLine());
-        System.out.print("Quantity: ");
-        int qty     = Integer.parseInt(scan.nextLine());
-        System.out.print("Image path (leave blank): ");
-        String img  = scan.nextLine().trim();
-        String imgPath = img.isEmpty() ? null : img;
-
-        // 3) Instantiate the correct subclass
-        Product p;
-        switch (catType) {
-            case Engine:
-                p = new Engine(name, sub, cost, price, qty, imgPath);
-                break;
-            case Transmission:
-                p = new Transmission(name, sub, cost, price, qty, imgPath);
-                break;
-            case Suspension:
-                p = new Suspension(name, sub, cost, price, qty, imgPath);
-                break;
-            case Brakes:
-                p = new Brakes(name, sub, cost, price, qty, imgPath);
-                break;
-            case Electrical:
-                p = new Electrical(name, sub, cost, price, qty, imgPath);
-                break;
-            case Cooling:
-                p = new Cooling(name, sub, cost, price, qty, imgPath);
-                break;
-            case Exhaust:
-                p = new Exhaust(name, sub, cost, price, qty, imgPath);
-                break;
-            case Fuel:
-                p = new Fuel(name, sub, cost, price, qty, imgPath);
-                break;
-            case Body:
-                p = new Body(name, sub, cost, price, qty, imgPath);
-                break;
-            default:
-                // should never happen
-                System.out.println("Unhandled category.\n");
-                return;
-        }
-
-        inv.addProduct(p);
-        System.out.println("✔ Product added: " + p.getCategoryType() + " – " + p.getName() + "\n");
     }
-
 
     private static void restockProduct(Inventory inv, Scanner scan) {
         System.out.print("Product name to restock: ");
-        String name = scan.nextLine();
+        String name = scan.nextLine().trim();
         Product p = inv.searchByName(name);
-        if (p == null) {
-            System.out.println("No such product.\n");
-            return;
-        }
-        System.out.print("Quantity to add: ");
-        int qty;
+        if (p == null) { System.out.println("No such product.\n"); return; }
         try {
-            qty = Integer.parseInt(scan.nextLine());
+            System.out.print("Quantity to add: ");
+            int qty = Integer.parseInt(scan.nextLine().trim());
+            p.increaseStock(qty);
+            System.out.println("Restocked. New quantity: " + p.getQuantity() + "\n");
         } catch (NumberFormatException e) {
             System.out.println("Invalid number.\n");
-            return;
         }
-        p.increaseStock(qty);
-        System.out.println("Restocked. New quantity: " + p.getQuantity() + "\n");
     }
 
     private static void searchByName(Inventory inv, Scanner scan) {
         System.out.print("Enter Name: ");
-        Product p = inv.searchByName(scan.nextLine());
-        if (p != null) p.printDetails();
-        else           System.out.println("No product found by that name.\n");
+        Product p = inv.searchByName(scan.nextLine().trim());
+        if (p != null) p.printDetails(); else System.out.println("No product found.\n");
     }
 
     private static void searchByCategory(Inventory inv, Scanner scan) {
         System.out.print("Enter Category: ");
-        inv.searchByCategory(scan.nextLine());
+        inv.searchByCategory(scan.nextLine().trim());
         System.out.println();
     }
 
     private static void searchBySubCategory(Inventory inv, Scanner scan) {
         System.out.print("Enter Sub-category: ");
-        inv.searchBySubCategory(scan.nextLine());
+        inv.searchBySubCategory(scan.nextLine().trim());
         System.out.println();
     }
 
     private static void sellProduct(Inventory inv, Scanner scan) {
         System.out.print("Product name: ");
-        String prodName = scan.nextLine();
+        String prodName = scan.nextLine().trim();
         Product prod = inv.searchByName(prodName);
-        if (prod == null) {
-            System.out.println("No such product.\n");
-            return;
+        if (prod == null) { System.out.println("No such product.\n"); return; }
+        try {
+            System.out.print("Quantity to sell: ");
+            int qty = Integer.parseInt(scan.nextLine().trim());
+            if (qty > prod.getQuantity()) {
+                System.out.println("Not enough stock.\n");
+                return;
+            }
+            prod.decreaseStock(qty);
+            OrderItem item = new OrderItem(prod.getName(), qty, prod.getRetailPrice());
+            orders.add(new Order(Collections.singletonList(item)));
+            System.out.println("Sold " + qty + " x " + prod.getName() + ".\n");
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid number.\n");
         }
-        System.out.print("Quantity to sell: ");
-        int qty = Integer.parseInt(scan.nextLine());
-        if (qty > prod.getQuantity()) {
-            System.out.println("Not enough stock.\n");
-            return;
-        }
-        prod.decreaseStock(qty);
-        OrderItem item = new OrderItem(prod.getName(), qty, prod.getRetailPrice());
-        List<OrderItem> items = new ArrayList<>();
-        items.add(item);
-        Order order = new Order(items);
-        orders.add(order);
-        System.out.println("Product sold:");
-        order.printOrder();
-        System.out.println();
     }
 
     private static void addUser(Scanner scan) {
         System.out.print("New username: ");
-        String username = scan.nextLine();
-        for (User u : users) {
-            if (u.getUsername().equals(username)) {
-                System.out.println("User already exists.\n");
-                return;
-            }
-        }
+        String username = scan.nextLine().trim();
+        if (username.isEmpty()) return;
+        for (User u : users) if (u.getUsername().equals(username)) {
+            System.out.println("User already exists.\n"); return; }
         System.out.print("New password: ");
-        String password = scan.nextLine();
+        String password = scan.nextLine().trim();
         String role;
         while (true) {
             System.out.print("Role ('admin' or 'standard'): ");
-            role = scan.nextLine();
-            if (role.equals("admin") || role.equals("standard")) break;
+            role = scan.nextLine().trim();
+            if ("admin".equals(role) || "standard".equals(role)) break;
             System.out.println("Invalid role, try again.");
         }
         users.add(new User(username, password, role));
@@ -429,24 +341,19 @@ public class Main {
 
     private static void deleteUser(Scanner scan, User currentUser) {
         System.out.print("Username to delete: ");
-        String username = scan.nextLine();
+        String username = scan.nextLine().trim();
         if (username.equals(currentUser.getUsername())) {
-            System.out.println("Cannot delete yourself.\n");
-            return;
+            System.out.println("Cannot delete yourself.\n"); return;
         }
-        User toRemove = null;
-        for (User u : users) {
+        for (Iterator<User> it = users.iterator(); it.hasNext(); ) {
+            User u = it.next();
             if (u.getUsername().equals(username)) {
-                toRemove = u;
-                break;
+                it.remove();
+                System.out.println("User deleted: " + username + "\n");
+                return;
             }
         }
-        if (toRemove == null) {
-            System.out.println("No such user.\n");
-        } else {
-            users.remove(toRemove);
-            System.out.println("User deleted: " + username + "\n");
-        }
+        System.out.println("No such user.\n");
     }
 
     private static void listUsers() {

@@ -5,6 +5,7 @@ public enum CategoryType {
     Transmission,
     Suspension,
     Brakes,
+    Battery,
     Electrical,
     Cooling,
     Exhaust,

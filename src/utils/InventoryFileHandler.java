@@ -1,58 +1,90 @@
-
 package utils;
 
-import model.*;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Scanner;
+import java.io.*;
+
+import model.Inventory;
+import model.Product;
+import model.CategoryType;
+import model.SubCategoryType;
+
+// import each of your concrete product classes
+import model.Categorys.Engine;
+import model.Categorys.Brakes;
+import model.Categorys.Cooling;
+import model.Categorys.Electrical;
+import model.Categorys.Exhaust;
+import model.Categorys.Fuel;
+import model.Categorys.Suspension;
+import model.Categorys.Transmission;
+import model.Categorys.Body;
 
 public class InventoryFileHandler {
     private static final String FILE_NAME = "inventory.csv";
 
-    /** Loads products from CSV into the given Inventory */
+    /** Loads CSV rows into your Inventory */
     public static void loadInventory(Inventory inv) {
-        File file = new File(FILE_NAME);
-        if (!file.exists()) return;
+        try (BufferedReader in = new BufferedReader(new FileReader(FILE_NAME))) {
+            String line;
+            while ((line = in.readLine()) != null) {
+                // CSV format: name,subCategory,category,cost,price,qty,imagePath
+                String[] parts = line.split(",", 6);
+                if (parts.length < 6) continue;
 
-        try (Scanner sc = new Scanner(file)) {
-            while (sc.hasNextLine()) {
-                String[] parts = sc.nextLine().split(",", -1);
-                // now expecting exactly 7 columns
-                if (parts.length != 7) continue;
-
-                String name    = parts[0];
-                String catStr  = parts[1].trim().toUpperCase();
-                String sub     = parts[2];
+                String name    = parts[0].trim();
+                String subStr  = parts[1].trim().toUpperCase();
+                String catStr  = parts[2].trim().toUpperCase();
                 double cost    = Double.parseDouble(parts[3]);
                 double price   = Double.parseDouble(parts[4]);
-                int qty        = Integer.parseInt(parts[5]);
-                String imgPath = parts[6].isEmpty() ? null : parts[6];
+                String[] qtyAndPath = parts[5].split(",", 2);
+                int    qty     = Integer.parseInt(qtyAndPath[0].trim());
+                String imgPath = (qtyAndPath.length > 1) ? qtyAndPath[1].trim() : "";
 
-                // parse enum
-                CategoryType ct;
+                // parse enums
+                CategoryType    ct;
+                SubCategoryType subType;
                 try {
-                    ct = CategoryType.valueOf(catStr);
+                    ct      = CategoryType.valueOf(catStr);
                 } catch (IllegalArgumentException e) {
                     System.err.println("Unknown category in CSV: " + catStr);
                     continue;
                 }
-
+                try {
+                    subType = SubCategoryType.valueOf(subStr);
+                } catch (IllegalArgumentException e) {
+                    System.err.println("Unknown sub-category in CSV: " + subStr);
+                    continue;
+                }
 
                 Product p;
                 switch (ct) {
-                    case Engine:       p = new Engine(name, sub, cost, price, qty, imgPath);       break;
-                    case Transmission: p = new Transmission(name, sub, cost, price, qty, imgPath); break;
-                    case Suspension:   p = new Suspension(name, sub, cost, price, qty, imgPath);   break;
-                    case Brakes:       p = new Brakes(name, sub, cost, price, qty, imgPath);       break;
-                    case Electrical:   p = new Electrical(name, sub, cost, price, qty, imgPath);   break;
-                    case Cooling:      p = new Cooling(name, sub, cost, price, qty, imgPath);      break;
-                    case Exhaust:      p = new Exhaust(name, sub, cost, price, qty, imgPath);      break;
-                    case Fuel:         p = new Fuel(name, sub, cost, price, qty, imgPath);         break;
-                    case Body:         p = new Body(name, sub, cost, price, qty, imgPath);         break;
+                    case Engine:
+                        p = new Engine(name, subType, cost, price, qty, imgPath);
+                        break;
+                    case Brakes:
+                        p = new Brakes(name, subType, cost, price, qty, imgPath);
+                        break;
+                    case Cooling:
+                        p = new Cooling(name, subType, cost, price, qty, imgPath);
+                        break;
+                    case Electrical:
+                        p = new Electrical(name, subType, cost, price, qty, imgPath);
+                        break;
+                    case Exhaust:
+                        p = new Exhaust(name, subType, cost, price, qty, imgPath);
+                        break;
+                    case Fuel:
+                        p = new Fuel(name, subType, cost, price, qty, imgPath);
+                        break;
+                    case Suspension:
+                        p = new Suspension(name, subType, cost, price, qty, imgPath);
+                        break;
+                    case Transmission:
+                        p = new Transmission(name, subType, cost, price, qty, imgPath);
+                        break;
+                    case Body:
+                        p = new Body(name, subType, cost, price, qty, imgPath);
+                        break;
                     default:
-                        // shouldn't happen
                         continue;
                 }
 
@@ -70,12 +102,12 @@ public class InventoryFileHandler {
                 out.printf(
                         "%s,%s,%s,%.2f,%.2f,%d,%s%n",
                         p.getName(),
-                        p.getCategoryType().name(),      // write the enum name
-                        p.getSubCategory(),
+                        p.getSubCategoryType().name(),
+                        p.getCategoryType().name(),
                         p.getCostPrice(),
                         p.getRetailPrice(),
                         p.getQuantity(),
-                        p.getImagePath() != null ? p.getImagePath() : ""
+                        p.getImagePath()
                 );
             }
         } catch (IOException e) {
@@ -83,60 +115,58 @@ public class InventoryFileHandler {
         }
     }
 
-
+    /** Exports a single product report to a csv*/
     public static void exportProductReport(Inventory inv, String productName) {
         Product p = inv.searchByName(productName);
         if (p == null) {
-            System.out.println("No such product: " + productName);
+            System.err.println("Product not found: " + productName);
             return;
         }
-
-        String fileName = "report_" + productName.replaceAll("\\s+", "_") + ".txt";
+        String fileName = productName + "_report.csv";
         try (PrintWriter out = new PrintWriter(new FileWriter(fileName))) {
             out.println("Product Report for: " + productName);
-            out.println("-----------------------------");
-            out.println("Name:        " + p.getName());
-            out.println("Category:    " + p.getCategoryType().name());
-            out.println("Sub-category: " + p.getSubCategory());
-            out.printf("Cost Price:  %.2f%n", p.getCostPrice());
+            out.printf("Category: %s%n", p.getCategoryType());
+            out.printf("Sub-Category: %s%n", p.getSubCategoryType());
+            out.printf("Cost Price: %.2f%n", p.getCostPrice());
             out.printf("Retail Price: %.2f%n", p.getRetailPrice());
-            out.println("Quantity:    " + p.getQuantity());
+            out.printf("Quantity: %d%n", p.getQuantity());
+
             System.out.println("Exported product report to " + fileName);
         } catch (IOException e) {
             System.err.println("Error exporting product report: " + e.getMessage());
         }
     }
-/** Export full inventory report to a text file */
-    public static void exportFullInventoryReport(Inventory inv) {
-        String fileName = "full_inventory_report.txt";
-        try (PrintWriter out = new PrintWriter(new FileWriter(fileName))) {
-            out.println("Full Inventory Report");
-            out.println("---------------------");
 
-            double totalCostValue   = 0;
-            double totalRetailValue = 0;
+    /** Exports a full inventory report to a text file */
+    public static void exportFullInventoryReport(Inventory inv) {
+        String fileName = "full_inventory_report.csv";
+        try (PrintWriter out = new PrintWriter(new FileWriter(fileName))) {
+            out.println("Name,SubCategory,Category,Cost,Price,Quantity");
+
+            double totalCost = 0;
+            double totalRetail = 0;
 
             for (Product p : inv.getProducts()) {
                 out.printf(
-                        "%s (%s > %s): Qty=%d, Cost=%.2f, Price=%.2f%n",
+                        "%s,%s,%s,%.2f,%.2f,%d%n",
                         p.getName(),
+                        p.getSubCategoryType().name(),
                         p.getCategoryType().name(),
-                        p.getSubCategory(),
-                        p.getQuantity(),
                         p.getCostPrice(),
-                        p.getRetailPrice()
+                        p.getRetailPrice(),
+                        p.getQuantity()
                 );
-                totalCostValue   += p.getCostPrice()   * p.getQuantity();
-                totalRetailValue += p.getRetailPrice() * p.getQuantity();
+                totalCost += p.getCostPrice() * p.getQuantity();
+                totalRetail += p.getRetailPrice() * p.getQuantity();
             }
 
-            out.println();
-            out.printf("Total cost value:   %.2f%n", totalCostValue);
-            out.printf("Total retail value: %.2f%n", totalRetailValue);
+            // Now the totals row only needs 6 columns
+            out.printf("Totals,,,,%.2f,%.2f%n", totalCost, totalRetail);
 
             System.out.println("Exported full inventory report to " + fileName);
         } catch (IOException e) {
             System.err.println("Error exporting full inventory report: " + e.getMessage());
         }
     }
+
 }

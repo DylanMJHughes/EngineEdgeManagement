@@ -15,9 +15,11 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import utils.InventoryFileHandler;
 import javafx.stage.FileChooser;
 import java.io.File;
 import model.*;
+import model.Categorys.*;
 import utils.*;
 
 import java.util.ArrayList;
@@ -27,14 +29,9 @@ import java.util.Collections;
 import java.util.Optional;
 
 import model.CategoryType;
-import model.Engine;
-import model.Transmission;
-import model.Suspension;
-import model.Electrical;
-import model.Cooling;
-import model.Exhaust;
-import model.Fuel;
-import model.Body;
+import model.Categorys.Transmission;
+import model.Categorys.Suspension;
+import model.SubCategoryType;
 import javafx.scene.control.ChoiceDialog;
 import javafx.beans.property.SimpleStringProperty;
 
@@ -144,16 +141,27 @@ public class InventoryApp extends Application {
         title.setStyle("-fx-text-fill:white; -fx-font-size:16px;");
 
         Button[] buttons = {
-                createButton("Sell Product", e -> sellProduct()),
-                createButton("Restock Product", e -> restockProduct()),
-                createButton("Show Inventory", e -> showInventoryTable()),
-                createButton("Search by Name", e -> promptAndSearchName()),
-                createButton("Search by Category", e -> promptAndSearchCategory()),
-                createButton("Search by Sub-category", e -> promptAndSearchSub()),
-                createButton("Export Product Report", e -> exportSingleReport()),
-                createButton("Export Full Inventory Report", e -> InventoryFileHandler.exportFullInventoryReport(inventory)),
-                createButton("Log out", e -> primaryStage.setScene(buildLoginScene()))
+                createButton("Sell Product",                e -> sellProduct()),
+                createButton("Restock Product",             e -> restockProduct()),
+                createButton("Show Inventory",              e -> showInventoryTable()),
+                createButton("Search by Name",              e -> promptAndSearchName()),
+                createButton("Search by Category",          e -> promptAndSearchCategory()),
+                createButton("Search by Sub-category",      e -> promptAndSearchSub()),
+
+                // inline‐prompt + static call to exportProductReport:
+                createButton("Export Product Report",       e -> {
+                    String prod = prompt("Enter product for report:");
+                    if (!prod.isEmpty()) {
+                        InventoryFileHandler.exportProductReport(inventory, prod);
+                    }
+                }),
+
+                // direct static call to exportFullInventoryReport:
+                createButton("Export Full Inventory Report",e -> InventoryFileHandler.exportFullInventoryReport(inventory)),
+
+                createButton("Log out",                     e -> primaryStage.setScene(buildLoginScene()))
         };
+
 
         root.getChildren().add(title);
         root.getChildren().addAll(buttons);
@@ -179,7 +187,7 @@ public class InventoryApp extends Application {
                 createButton("Search by Category", e -> promptAndSearchCategory()),
                 createButton("Search by Sub-category", e -> promptAndSearchSub()),
                 createButton("Export Product Report", e -> exportSingleReport()),
-                createButton("Export Full Inventory Report", e -> InventoryFileHandler.exportFullInventoryReport(inventory)),
+                createButton("Export Full Inventory Report", e -> exportFullInventoryWithPopup()),
                 createButton("Settings", e -> primaryStage.setScene(buildSettingsScene(user))),
                 createButton("Log out", e -> primaryStage.setScene(buildLoginScene()))
         };
@@ -189,6 +197,17 @@ public class InventoryApp extends Application {
         Scene scene = new Scene(root, 360, 600);
         scene.getStylesheets().add(getClass().getResource("dark-theme.css").toExternalForm());
         return scene;
+    }
+
+    private void exportFullInventoryWithPopup() {
+        InventoryFileHandler.exportFullInventoryReport(inventory);
+        // Show confirmation popup
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        styleDialog(alert); 
+        alert.setTitle("Export Complete");
+        alert.setHeaderText(null);
+        alert.setContentText("Full inventory report exported to\nfull_inventory_report.csv");
+        alert.showAndWait();
     }
 
     private Scene buildSettingsScene(User admin) {
@@ -351,24 +370,36 @@ public class InventoryApp extends Application {
 
     private void addProduct() {
         // 1) Let user pick one of your enum categories
-        ChoiceDialog<CategoryType> dlg = new ChoiceDialog<>(
-                CategoryType.Engine,           // default selection
-                CategoryType.values()          // all values
+        ChoiceDialog<CategoryType> catDlg = new ChoiceDialog<>(
+                CategoryType.Engine,
+                CategoryType.values()
         );
-        dlg.setHeaderText("Select Category:");
-        dlg.initOwner(primaryStage);
-        Optional<CategoryType> catOpt = dlg.showAndWait();
+        catDlg.setHeaderText("Select Category:");
+        catDlg.initOwner(primaryStage);
+        styleDialog(catDlg);
+        Optional<CategoryType> catOpt = catDlg.showAndWait();
         if (catOpt.isEmpty()) return;      // user cancelled
         CategoryType catType = catOpt.get();
 
-        // 2) Gather the rest of the info
+        // 2) Let user pick one of your enum sub-categories
+        ChoiceDialog<SubCategoryType> subDlg = new ChoiceDialog<>(
+                SubCategoryType.values()[0],
+                SubCategoryType.values()
+        );
+        subDlg.setHeaderText("Select Sub-category:");
+        subDlg.initOwner(primaryStage);
+        styleDialog(subDlg);
+        Optional<SubCategoryType> subOpt = subDlg.showAndWait();
+        if (subOpt.isEmpty()) return;      // user cancelled
+        SubCategoryType subType = subOpt.get();
+
+        // 3) Gather the rest of the info
         String name  = prompt("Product name:");
-        String sub   = prompt("Sub-category:");
         double cost  = Double.parseDouble(prompt("Cost Price:"));
         double price = Double.parseDouble(prompt("Retail Price:"));
         int qty      = Integer.parseInt(prompt("Quantity:"));
 
-        // 3) Let user pick an image file (optional)
+        // 4) Let user pick an image file (optional)
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Select Product Image (optional)");
         chooser.getExtensionFilters().add(
@@ -377,44 +408,45 @@ public class InventoryApp extends Application {
         File file = chooser.showOpenDialog(primaryStage);
         String imgPath = (file != null) ? file.toURI().toString() : null;
 
-        // 4) Instantiate the right subclass
+        // 5) Instantiate the right subclass using the enum subType
         Product p;
         switch (catType) {
             case Engine:
-                p = new Engine(name, sub, cost, price, qty, imgPath);
+                p = new Engine(name, subType, cost, price, qty, imgPath);
                 break;
             case Transmission:
-                p = new Transmission(name, sub, cost, price, qty, imgPath);
+                p = new Transmission(name, subType, cost, price, qty, imgPath);
                 break;
             case Suspension:
-                p = new Suspension(name, sub, cost, price, qty, imgPath);
+                p = new Suspension(name, subType, cost, price, qty, imgPath);
                 break;
             case Brakes:
-                p = new Brakes(name, sub, cost, price, qty, imgPath);
+                p = new Brakes(name, subType, cost, price, qty, imgPath);
                 break;
             case Electrical:
-                p = new Electrical(name, sub, cost, price, qty, imgPath);
+                p = new Electrical(name, subType, cost, price, qty, imgPath);
                 break;
             case Cooling:
-                p = new Cooling(name, sub, cost, price, qty, imgPath);
+                p = new Cooling(name, subType, cost, price, qty, imgPath);
                 break;
             case Exhaust:
-                p = new Exhaust(name, sub, cost, price, qty, imgPath);
+                p = new Exhaust(name, subType, cost, price, qty, imgPath);
                 break;
             case Fuel:
-                p = new Fuel(name, sub, cost, price, qty, imgPath);
+                p = new Fuel(name, subType, cost, price, qty, imgPath);
                 break;
             case Body:
-                p = new Body(name, sub, cost, price, qty, imgPath);
+                p = new Body(name, subType, cost, price, qty, imgPath);
                 break;
             default:
                 throw new IllegalStateException("Unhandled category: " + catType);
         }
 
-        // 5) Add and notify
+        // 6) Add and notify
         inventory.addProduct(p);
         alert("✔ Product added: " + catType + " – " + name);
     }
+
 
 
     private void restockProduct() {
@@ -499,8 +531,18 @@ public class InventoryApp extends Application {
                 )
         );
 
+
+
+
+        //Sub category column
         TableColumn<Product, String> subCol = new TableColumn<>("Sub-category");
-        subCol.setCellValueFactory(new PropertyValueFactory<>("subCategory"));
+        subCol.setCellValueFactory(cellData ->
+                new SimpleStringProperty(
+                        cellData.getValue()
+                                .getSubCategoryType()
+                                .name()
+                )
+        );
 
         TableColumn<Product, Integer> qtyCol = new TableColumn<>("Qty");
         qtyCol.setCellValueFactory(new PropertyValueFactory<>("quantity"));
@@ -544,8 +586,8 @@ public class InventoryApp extends Application {
                         "Retail Price: %.2f%n" +
                         "Quantity: %d",
                 p.getName(),
-
-                p.getSubCategory(),
+                p.getCategoryType(),
+                p.getSubCategoryType(),
                 p.getCostPrice(),
                 p.getRetailPrice(),
                 p.getQuantity()
