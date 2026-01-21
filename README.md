@@ -41,7 +41,7 @@ The system supports:
 
 ## 🛠️ Technologies Used
 
-- Language: **Java**
+- Language: **Java** & **CSS**
 - Environment: Console-based application
 - Tools: Standard Java libraries
 
